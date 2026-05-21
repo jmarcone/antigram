@@ -70,6 +70,30 @@ antigram/
 └── README.md
 ```
 
+## Try the demo (no Meta export required)
+
+```sh
+pnpm install
+pnpm demo:build              # writes demo-export.zip at the repo root
+pnpm tauri:dev               # starts the desktop app
+# in the app: pick demo-export.zip, pick any output folder, click "Read my export"
+```
+
+The demo ZIP contains **18 synthetic posts spanning 2014–2024** with:
+
+- carousels of 2–4 photos
+- emoji captions (some intentionally mojibake'd, like Meta's real exports)
+- GPS coordinates from a dozen different cities
+- comments with mojibake (we fix them on read)
+- empty-caption posts so the gallery handles that case
+
+You can also dry-run the pipeline through the CLI without the desktop app:
+
+```sh
+pnpm reclaim ./demo-export.zip ./out
+# → ./out/2014-05/, ./out/2024-12/, ..., ./out/_metadata/, ./out/_archive_info.json
+```
+
 ## Development
 
 Requirements:
@@ -82,8 +106,10 @@ Requirements:
 ```sh
 pnpm install
 pnpm typecheck
-pnpm test
-pnpm --filter @antigram/cli parse <path-to-export.zip>
+pnpm test                    # 48 tests across parser, metadata, organizer
+pnpm parse <path-to-zip>     # discovery + parse stats
+pnpm reclaim <zip> <out>     # full pipeline (CLI)
+pnpm tauri:dev               # desktop app (dev mode)
 ```
 
 Status of each piece is tracked in the issue list, not here. If a feature

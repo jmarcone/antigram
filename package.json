@@ -19,6 +19,7 @@
     "parse": "pnpm --filter @antigram/cli parse",
     "reclaim": "pnpm --filter @antigram/cli reclaim",
     "fixtures:build": "pnpm --filter @antigram/parser fixtures:build",
+    "demo:build": "pnpm --filter @antigram/parser demo:build",
     "build:sidecar": "pnpm --filter @antigram/cli build:sidecar",
     "tauri:dev": "pnpm build:sidecar && pnpm --filter @antigram/desktop tauri:dev",
     "tauri:build": "pnpm build:sidecar && pnpm --filter @antigram/desktop tauri:build"
