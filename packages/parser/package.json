@@ -1,0 +1,32 @@
+{
+  "name": "@antigram/parser",
+  "version": "0.1.0-dev",
+  "private": true,
+  "description": "Streaming parser for Meta GDPR Instagram exports.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "files": ["src", "README.md"],
+  "scripts": {
+    "test": "vitest --run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "fixtures:build": "tsx scripts/build-fixture.ts"
+  },
+  "dependencies": {
+    "@antigram/types": "workspace:*",
+    "yauzl": "^3.2.0"
+  },
+  "devDependencies": {
+    "@types/yauzl": "^2.10.3",
+    "yazl": "^3.3.1",
+    "@types/yazl": "^2.4.5"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "@antigram/cli",
+  "version": "0.1.0-dev",
+  "private": true,
+  "description": "Standalone Antigram CLI. Works without the desktop app.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "antigram": "./src/index.ts"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": ["src", "README.md"],
+  "scripts": {
+    "parse": "tsx src/index.ts parse",
+    "reclaim": "tsx src/index.ts reclaim",
+    "test": "vitest --run --passWithNoTests",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@antigram/types": "workspace:*",
+    "@antigram/parser": "workspace:*",
+    "@antigram/metadata": "workspace:*",
+    "@antigram/organizer": "workspace:*"
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "name": "@antigram/organizer",
+  "version": "0.1.0-dev",
+  "private": true,
+  "description": "Output folder layout (YYYY-MM bucketing, sidecars, archive_info).",
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "files": ["src", "README.md"],
+  "scripts": {
+    "test": "vitest --run --passWithNoTests",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@antigram/types": "workspace:*"
+  }
+}
