@@ -7,7 +7,6 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# Cancel older runs for the same ref. PR-spam friendly.
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -17,9 +16,18 @@ permissions:
 
 jobs:
   test:
-    name: Lint, typecheck, test (Ubuntu)
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    name: Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # Antigram ships for Windows + Mac + Linux. We test on Linux (cheap +
+        # fast, catches most bugs) and Windows (most users, most surface for
+        # path-separator and binary-resolution bugs). Mac added later once
+        # we ship a .dmg.
+        os: [ubuntu-latest, windows-latest]
 
     steps:
       - name: Checkout
@@ -36,9 +44,8 @@ jobs:
           node-version: 24
           cache: pnpm
 
-      - name: System deps for exiftool (Perl is already on ubuntu-latest)
-        run: |
-          perl --version
+      - name: Verify Perl (exiftool needs it on Linux)
+        run: perl --version
 
       - name: Install workspace deps
         run: pnpm install --frozen-lockfile
@@ -50,7 +57,6 @@ jobs:
         run: pnpm -r typecheck
 
       - name: Build the sidecar bundle
-        # Sidecar protocol tests run against dist/sidecar.cjs.
         run: pnpm build:sidecar
 
       - name: Build the test fixture
@@ -60,17 +66,21 @@ jobs:
         run: pnpm -r test
 
   rust-check:
-    name: Cargo check (Tauri shell)
-    runs-on: ubuntu-latest
+    name: Cargo check (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 30
-    # The Tauri Rust shell only needs cargo check on CI — the full bundle
-    # build is reserved for release runs.
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Tauri / Linux build deps
+        if: matrix.os == 'ubuntu-latest'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
