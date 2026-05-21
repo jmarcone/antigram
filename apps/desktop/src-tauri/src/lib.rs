@@ -5,14 +5,23 @@
 use serde::Serialize;
 use std::path::PathBuf;
 use std::process::Stdio;
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, Manager};
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::Command;
 
+// Workspace root baked at build time — used in dev mode only. In production
+// the sidecar lives in Tauri's resource_dir, not in the source tree.
 const WORKSPACE_ROOT: &str = env!("ANTIGRAM_WORKSPACE_ROOT");
 
-fn sidecar_script_path() -> PathBuf {
-    PathBuf::from(WORKSPACE_ROOT).join("packages/cli/dist/sidecar.cjs")
+fn sidecar_script_path(app: &AppHandle) -> Result<PathBuf, String> {
+    if cfg!(debug_assertions) {
+        Ok(PathBuf::from(WORKSPACE_ROOT).join("packages/cli/dist/sidecar.cjs"))
+    } else {
+        app.path()
+            .resource_dir()
+            .map(|d| d.join("sidecar.cjs"))
+            .map_err(|e| format!("could not resolve resource_dir: {e}"))
+    }
 }
 
 #[derive(Debug, Serialize, Clone)]
@@ -42,7 +51,7 @@ struct DoctorInfo {
 /// Parse the Meta export ZIP and return the typed Post[] for the gallery.
 #[tauri::command(rename_all = "camelCase")]
 async fn parse_export(app: AppHandle, zip_path: String) -> Result<ParseSummary, String> {
-    let script = sidecar_script_path();
+    let script = sidecar_script_path(&app)?;
 
     let mut child = Command::new("node")
         .arg(&script)
@@ -112,7 +121,7 @@ async fn reclaim(
     output_root: String,
     post_ids: Vec<String>,
 ) -> Result<ReclaimSummary, String> {
-    let script = sidecar_script_path();
+    let script = sidecar_script_path(&app)?;
 
     let mut cmd = Command::new("node");
     cmd.arg(&script).arg("reclaim").arg(&zip_path).arg(&output_root);
@@ -188,8 +197,8 @@ async fn reclaim(
 
 /// Sanity-check command surfaced in the UI's About / debug panel.
 #[tauri::command]
-async fn doctor() -> Result<DoctorInfo, String> {
-    let script = sidecar_script_path();
+async fn doctor(app: AppHandle) -> Result<DoctorInfo, String> {
+    let script = sidecar_script_path(&app)?;
     let sidecar_exists = tokio::fs::try_exists(&script).await.unwrap_or(false);
 
     let node_version = Command::new("node")

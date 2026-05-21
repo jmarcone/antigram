@@ -20,7 +20,7 @@
  */
 
 import path from "node:path";
-import { promises as fsp } from "node:fs";
+import { existsSync, promises as fsp } from "node:fs";
 import { parseExport } from "@antigram/parser";
 import { MetadataWriter } from "@antigram/metadata";
 import {
@@ -115,7 +115,12 @@ async function runReclaimCommand(
 
   emit({ k: "reclaim_start", total: selected.length });
 
-  const writer = new MetadataWriter();
+  // In production .msi builds the sidecar is bundled with a sibling
+  // exiftool.exe; let MetadataWriter use that instead of trying to
+  // resolve exiftool-vendored from node_modules (which the .msi doesn't
+  // ship). Dev/CLI runs fall through to exiftool-vendored's default.
+  const exiftoolPath = findBundledExiftool();
+  const writer = new MetadataWriter(exiftoolPath ? { exiftoolPath } : {});
   const source: MediaSource = {
     openEntryStream: (uri) => discovery.zip.openEntryStream(uri),
   };
@@ -145,6 +150,22 @@ async function runReclaimCommand(
   }
 
   emit({ k: "done", outputRoot: absOut, mediaWritten, warnings: allWarnings });
+}
+
+function findBundledExiftool(): string | undefined {
+  // The post-tsup stage-bundle step copies the ExifTool runtime to
+  // `<sidecar-dir>/exiftool/`. In dev (tsx of source) that folder doesn't
+  // exist, so we fall through to exiftool-vendored's default lookup.
+  // The sidecar always ships as CJS, so __filename is reliably defined.
+  const dir = path.dirname(__filename);
+  const candidates = [
+    path.join(dir, "exiftool", "exiftool.exe"),
+    path.join(dir, "exiftool", "exiftool"),
+  ];
+  for (const c of candidates) {
+    if (existsSync(c)) return c;
+  }
+  return undefined;
 }
 
 function parseFilterIds(args: readonly string[]): Set<string> | null {

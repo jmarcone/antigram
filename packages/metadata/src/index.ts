@@ -19,7 +19,7 @@
  *   }
  */
 
-import { exiftool, type ExifTool } from "exiftool-vendored";
+import { ExifTool, exiftool } from "exiftool-vendored";
 import type { Media } from "@antigram/types";
 import { buildExifTagSet } from "./exif-tags.js";
 
@@ -28,11 +28,18 @@ export type { ExifTagSet } from "./exif-tags.js";
 
 export interface MetadataWriterOptions {
   /**
-   * Inject a custom ExifTool instance (e.g. for tests). When omitted, uses
-   * the shared singleton from exiftool-vendored, which is fine for one-off
-   * runs but should be {@link close}d at the end.
+   * Inject a custom ExifTool instance (e.g. for tests). When omitted, the
+   * writer either constructs its own with {@link exiftoolPath} or falls
+   * back to exiftool-vendored's shared singleton.
    */
   exifTool?: ExifTool;
+  /**
+   * Absolute path to an exiftool binary that should be used instead of the
+   * one exiftool-vendored ships. Production .msi builds set this so we use
+   * the binary bundled next to the sidecar rather than the one in
+   * node_modules (which doesn't exist in the .msi).
+   */
+  exiftoolPath?: string;
 }
 
 export class MetadataWriter {
@@ -43,6 +50,9 @@ export class MetadataWriter {
     if (options.exifTool) {
       this.#exifTool = options.exifTool;
       this.#ownsInstance = false;
+    } else if (options.exiftoolPath) {
+      this.#exifTool = new ExifTool({ exiftoolPath: options.exiftoolPath });
+      this.#ownsInstance = true;
     } else {
       this.#exifTool = exiftool;
       this.#ownsInstance = true;

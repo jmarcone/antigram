@@ -13,7 +13,7 @@
   },
   "files": ["src", "README.md"],
   "scripts": {
-    "build:sidecar": "tsup",
+    "build:sidecar": "tsup && tsx scripts/stage-bundle.ts",
     "parse": "tsx src/index.ts parse",
     "reclaim": "tsx src/index.ts reclaim",
     "sidecar": "tsx src/sidecar.ts",

@@ -1,0 +1,76 @@
+name: Release
+
+# Triggered by pushing a tag matching v*. Builds the Tauri app, bundles
+# the Node sidecar + exiftool-vendored as resources, and creates a draft
+# GitHub Release with the .msi attached.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build & release (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # v0.1.0-alpha ships Windows only. macOS + Linux added in v0.1.1
+        # once we wire up platform-conditional resources for the
+        # exiftool-vendored binary subpackages (.pl for Mac/Linux,
+        # .exe for Windows).
+        os: [windows-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry + target
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri
+
+      - name: Install workspace deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Approve esbuild build script
+        run: pnpm rebuild esbuild
+
+      - name: Build the sidecar bundle
+        # Tauri's bundle.resources references packages/cli/dist/sidecar.cjs;
+        # it has to exist before `tauri build` runs.
+        run: pnpm build:sidecar
+
+      - name: Build Tauri app + create draft GitHub Release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: apps/desktop
+          tagName: ${{ github.ref_name }}
+          releaseName: "Antigram ${{ github.ref_name }}"
+          releaseDraft: true
+          prerelease: true
+          releaseBody: |
+            **Alpha release — see [CHANGELOG.md](https://github.com/jmarcone/antigram/blob/main/CHANGELOG.md) for the full notes.**
+
+            Unsigned Windows installer. SmartScreen will warn the first time you run it — click *More info → Run anyway*. Code signing is a v1.0 problem.
+
+            Antigram never sends your photos anywhere. There is no server.
