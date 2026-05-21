@@ -80,19 +80,22 @@ export function reduce(state: AppState, action: AppAction): AppState {
     case "parse_progress":
       return { ...state, parseProgress: { ...state.parseProgress, ...action.progress } };
     case "parse_done": {
-      // Defensive: if Rust returned posts=null (e.g. sidecar didn't get
-      // to flush its parsed envelope before exiting), treat it as an empty
-      // archive instead of crashing the reducer on `.map of null`.
+      // Defensive: if Rust returned posts=null (e.g. sidecar didn't get to
+      // flush its parsed envelope before exiting), treat as empty rather
+      // than crashing the reducer on `.map of null`.
       const posts = Array.isArray(action.posts) ? action.posts : [];
       if (posts.length === 0) {
+        const partialHint =
+          action.posts === null
+            ? "The parser crashed or didn't finish — check the terminal where pnpm tauri:dev is running for details."
+            : "Meta sometimes splits big exports into multiple ZIPs (one per category). " +
+              "Make sure you're using the LARGEST one — it's the only one that contains posts_*.json.";
         return {
           ...state,
           phase: "welcome",
           posts: [],
           warnings: action.warnings,
-          error:
-            "Antigram parsed your export but didn't find any posts. " +
-            "If your archive is very large, this is usually a sidecar buffering bug — please retry.",
+          error: `No posts found in this archive.\n\n${partialHint}`,
         };
       }
       return {
