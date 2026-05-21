@@ -13,8 +13,10 @@
   },
   "files": ["src", "README.md"],
   "scripts": {
+    "build:sidecar": "tsup",
     "parse": "tsx src/index.ts parse",
     "reclaim": "tsx src/index.ts reclaim",
+    "sidecar": "tsx src/sidecar.ts",
     "test": "vitest --run --passWithNoTests",
     "typecheck": "tsc --noEmit"
   },
@@ -22,7 +24,8 @@
     "@antigram/types": "workspace:*",
     "@antigram/parser": "workspace:*",
     "@antigram/metadata": "workspace:*",
-    "@antigram/organizer": "workspace:*"
+    "@antigram/organizer": "workspace:*",
+    "exiftool-vendored": "^30.4.0"
   },
   "devDependencies": {
     "@types/node": "^22.10.5"
