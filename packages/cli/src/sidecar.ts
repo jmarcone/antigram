@@ -205,8 +205,25 @@ async function main(): Promise<void> {
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     emit({ k: "error", message });
+    await flushStdout();
     process.exit(1);
   }
 }
 
-main();
+/**
+ * Drain process.stdout before letting the process exit. The `parsed`
+ * envelope for a large archive is multi-MB of JSON in a single line, and
+ * Node may not finish flushing it to the pipe before the event loop ends
+ * — which leaves the Rust side waiting for a newline that never comes,
+ * and silently returning `posts: null` to the React app. An explicit
+ * drain fixes it.
+ */
+function flushStdout(): Promise<void> {
+  return new Promise<void>((resolve) => {
+    // process.stdout.write('', cb) fires cb only once everything queued
+    // before it has been processed.
+    process.stdout.write("", () => resolve());
+  });
+}
+
+main().then(flushStdout);

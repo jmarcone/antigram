@@ -79,14 +79,30 @@ export function reduce(state: AppState, action: AppAction): AppState {
       return { ...state, phase: "parsing", parseProgress: {}, warnings: [], error: null };
     case "parse_progress":
       return { ...state, parseProgress: { ...state.parseProgress, ...action.progress } };
-    case "parse_done":
+    case "parse_done": {
+      // Defensive: if Rust returned posts=null (e.g. sidecar didn't get
+      // to flush its parsed envelope before exiting), treat it as an empty
+      // archive instead of crashing the reducer on `.map of null`.
+      const posts = Array.isArray(action.posts) ? action.posts : [];
+      if (posts.length === 0) {
+        return {
+          ...state,
+          phase: "welcome",
+          posts: [],
+          warnings: action.warnings,
+          error:
+            "Antigram parsed your export but didn't find any posts. " +
+            "If your archive is very large, this is usually a sidecar buffering bug — please retry.",
+        };
+      }
       return {
         ...state,
         phase: "gallery",
-        posts: action.posts,
+        posts,
         warnings: action.warnings,
-        selectedPostIds: new Set(action.posts.map((p) => p.id)),
+        selectedPostIds: new Set(posts.map((p) => p.id)),
       };
+    }
     case "toggle_post": {
       const next = new Set(state.selectedPostIds);
       if (next.has(action.postId)) next.delete(action.postId);

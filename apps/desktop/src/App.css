@@ -17,6 +17,23 @@
   --radius-card: 14px;
 }
 
+/*
+ * In dark mode we *flip the meaning* of the ink/paper tokens rather than
+ * just swapping `color` on `body`. That way every `text-(--color-ink-soft)`
+ * and `bg-(--color-paper-elev)` reference stays semantically correct without
+ * a per-token dark: variant.
+ */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --color-ink: #f4f4ef;
+    --color-ink-soft: #b5b5af;
+    --color-paper: #0a0a0a;
+    --color-paper-elev: #1b1b19;
+    --color-accent-soft: #4a2014;
+  }
+}
+
 @layer base {
   html,
   body,
@@ -32,17 +49,5 @@
   ::selection {
     background: var(--color-accent-soft);
     color: var(--color-ink);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root {
-      color-scheme: dark;
-    }
-    html,
-    body,
-    #root {
-      background-color: var(--color-ink);
-      color: var(--color-paper);
-    }
   }
 }
