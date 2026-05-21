@@ -100,10 +100,18 @@ function openStream(zip: ZipFile, entry: Entry): Promise<Readable> {
   });
 }
 
-async function streamToBuffer(stream: Readable): Promise<Buffer> {
-  const chunks: Buffer[] = [];
-  for await (const chunk of stream) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
-  }
-  return Buffer.concat(chunks);
+function streamToBuffer(stream: Readable): Promise<Buffer> {
+  // We previously used `for await (const chunk of stream)` which silently
+  // hung on some yauzl-produced streams — likely a timing race where the
+  // first `data` events fired before the async iterator finished attaching
+  // its listener, leaving the iterator waiting for events that already
+  // happened. The classic event-listener form has no such race.
+  return new Promise<Buffer>((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    stream.on("data", (chunk: Buffer | string) => {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    });
+    stream.once("end", () => resolve(Buffer.concat(chunks)));
+    stream.once("error", reject);
+  });
 }
