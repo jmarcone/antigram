@@ -106,11 +106,24 @@ Requirements:
 ```sh
 pnpm install
 pnpm typecheck
-pnpm test                    # 48 tests across parser, metadata, organizer
+pnpm test                    # 83 tests across all packages + sidecar protocol
 pnpm parse <path-to-zip>     # discovery + parse stats
 pnpm reclaim <zip> <out>     # full pipeline (CLI)
 pnpm tauri:dev               # desktop app (dev mode)
 ```
+
+### Test layout
+
+| Package              | What it tests                                                            |
+| -------------------- | ------------------------------------------------------------------------ |
+| `@antigram/parser`   | mojibake fix, ZIP discovery, full parse against the synthetic fixture    |
+| `@antigram/metadata` | pure tag-builder + a real exiftool round-trip on a tiny JPEG             |
+| `@antigram/organizer`| path/filename helpers + end-to-end folder layout against parser output   |
+| `@antigram/cli`      | CLI smoke (parse/reclaim/--limit/usage) + sidecar NDJSON wire contract   |
+| `@antigram/desktop`  | reducer transitions (welcome → parsing → gallery → reclaiming → done)    |
+
+GitHub Actions CI (`.github/workflows/ci.yml`) runs the same suite plus
+`cargo check` for the Tauri shell on every push and PR.
 
 Status of each piece is tracked in the issue list, not here. If a feature
 isn't documented above, it isn't built yet.

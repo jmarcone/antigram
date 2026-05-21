@@ -1,0 +1,92 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Cancel older runs for the same ref. PR-spam friendly.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Lint, typecheck, test (Ubuntu)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: System deps for exiftool (Perl is already on ubuntu-latest)
+        run: |
+          perl --version
+
+      - name: Install workspace deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Approve esbuild build script
+        run: pnpm rebuild esbuild
+
+      - name: Typecheck workspace
+        run: pnpm -r typecheck
+
+      - name: Build the sidecar bundle
+        # Sidecar protocol tests run against dist/sidecar.cjs.
+        run: pnpm build:sidecar
+
+      - name: Build the test fixture
+        run: pnpm fixtures:build
+
+      - name: Run all package tests
+        run: pnpm -r test
+
+  rust-check:
+    name: Cargo check (Tauri shell)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # The Tauri Rust shell only needs cargo check on CI — the full bundle
+    # build is reserved for release runs.
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Tauri / Linux build deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libgtk-3-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev
+
+      - name: Install Rust (stable)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo registry + target
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri
+
+      - name: Cargo check
+        working-directory: apps/desktop/src-tauri
+        run: cargo check --all-targets

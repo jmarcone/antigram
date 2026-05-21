@@ -17,7 +17,7 @@
     "parse": "tsx src/index.ts parse",
     "reclaim": "tsx src/index.ts reclaim",
     "sidecar": "tsx src/sidecar.ts",
-    "test": "vitest --run --passWithNoTests",
+    "test": "vitest --run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
