@@ -24,6 +24,11 @@ tokio = { version = "1", features = ["process", "io-util"] }
 
 [profile.release]
 opt-level = "s"
-lto = true
-codegen-units = 1
-strip = true
+# LTO + codegen-units=1 produce the smallest binary but stress mspdbsrv.exe
+# during parallel linking and OOM on low-RAM Windows boxes. Default off; can
+# be enabled per-release on a beefy CI runner.
+lto = false
+codegen-units = 16
+strip = "debuginfo"
+debug = false
+incremental = false
