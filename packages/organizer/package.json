@@ -20,5 +20,8 @@
   },
   "dependencies": {
     "@antigram/types": "workspace:*"
+  },
+  "devDependencies": {
+    "@antigram/parser": "workspace:*"
   }
 }

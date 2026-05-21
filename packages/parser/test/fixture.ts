@@ -149,11 +149,17 @@ export const FIXTURE_ACCOUNT_INFO = {
   account_information: { username: "test_user", emails: [] },
 };
 
-export const PLACEHOLDER_JPEG_BYTES = Buffer.from([
-  // SOI marker + 'ANTIGRAM-FIXTURE-PLACEHOLDER' + EOI marker. Not a valid
-  // JPEG; tests that only need the bytes to exist (parser) accept anything.
-  0xff, 0xd8, 0x41, 0x4e, 0x54, 0x49, 0x47, 0x52, 0x41, 0x4d, 0xff, 0xd9,
-]);
+// 1x1 white JPEG (134 bytes). Verified valid against exiftool & Pillow so
+// the end-to-end pipeline can embed metadata without errors.
+export const PLACEHOLDER_JPEG_BYTES = Buffer.from(
+  "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8U" +
+    "HRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgN" +
+    "DRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIy" +
+    "MjIyMjL/wAARCAABAAEDASIAAhEBAxEA/8QAFQABAQAAAAAAAAAAAAAAAAAAAAn/xAAU" +
+    "EAEAAAAAAAAAAAAAAAAAAAAA/8QAFAEBAAAAAAAAAAAAAAAAAAAAAP/EABQRAQAAAAAA" +
+    "AAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/APvD/9k=",
+  "base64",
+);
 
 // ---------------------------------------------------------------------------
 // Builder.

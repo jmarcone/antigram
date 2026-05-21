@@ -19,6 +19,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@antigram/types": "workspace:*"
+    "@antigram/types": "workspace:*",
+    "exiftool-vendored": "^30.4.0"
   }
 }

@@ -8,6 +8,7 @@
  */
 
 import { runParse } from "./parse.js";
+import { runReclaim } from "./reclaim.js";
 
 const SUBCOMMANDS = ["parse", "reclaim", "doctor"] as const;
 type Sub = (typeof SUBCOMMANDS)[number];
@@ -43,8 +44,7 @@ async function main(): Promise<void> {
       return;
     }
     case "reclaim": {
-      process.stderr.write("[antigram] reclaim is not implemented yet (Day 3 of the alpha plan).\n");
-      process.exit(2);
+      await runReclaim(rest);
       return;
     }
     case "doctor": {

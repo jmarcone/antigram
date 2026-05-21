@@ -23,5 +23,8 @@
     "@antigram/parser": "workspace:*",
     "@antigram/metadata": "workspace:*",
     "@antigram/organizer": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.5"
   }
 }
