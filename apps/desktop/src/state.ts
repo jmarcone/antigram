@@ -66,6 +66,7 @@ export type AppAction =
   | { type: "reclaim_progress"; progress: Partial<ReclaimProgress> }
   | { type: "reclaim_done"; outputRoot: string; mediaWritten: number; warnings: string[] }
   | { type: "error"; message: string }
+  | { type: "go_back" }
   | { type: "reset" };
 
 export function reduce(state: AppState, action: AppAction): AppState {
@@ -124,7 +125,15 @@ export function reduce(state: AppState, action: AppAction): AppState {
         reclaimProgress: { ...state.reclaimProgress, mediaWritten: action.mediaWritten },
       };
     case "error":
-      return { ...state, error: action.message };
+      // Always return the user to a recoverable surface: keep the picks
+      // they made (zipPath, outputRoot) so they can retry without redoing
+      // the whole file-picker dance, but bounce out of parsing/reclaiming
+      // so they aren't stuck on a frozen spinner.
+      return { ...state, phase: "welcome", error: action.message };
+    case "go_back":
+      // Manual "back to start" from the gallery. Same shape as error but
+      // without the error message.
+      return { ...state, phase: "welcome", error: null };
     case "reset":
       return initialState;
   }

@@ -170,14 +170,42 @@ describe("reclaim lifecycle", () => {
   });
 });
 
-describe("error / reset", () => {
-  it("error stores the message but doesn't change phase by itself", () => {
+describe("error / go_back / reset", () => {
+  it("error bounces back to welcome and stores the message", () => {
+    // Simulate the path users actually hit: parse_start → error.
     const s = apply(initialState, { type: "parse_start" }, {
       type: "error",
       message: "boom",
     });
+    expect(s.phase).toBe("welcome");
     expect(s.error).toBe("boom");
-    expect(s.phase).toBe("parsing");
+  });
+
+  it("error preserves zipPath/outputRoot so the user doesn't have to re-pick", () => {
+    const s = apply(
+      initialState,
+      { type: "select_zip", zipPath: "/z.zip" },
+      { type: "select_output", outputRoot: "/o" },
+      { type: "parse_start" },
+      { type: "error", message: "boom" },
+    );
+    expect(s.phase).toBe("welcome");
+    expect(s.zipPath).toBe("/z.zip");
+    expect(s.outputRoot).toBe("/o");
+  });
+
+  it("go_back returns to welcome and clears any prior error", () => {
+    const s = apply(
+      initialState,
+      { type: "select_zip", zipPath: "/z.zip" },
+      { type: "parse_start" },
+      { type: "parse_done", posts: [makePost()], warnings: [] },
+      { type: "go_back" },
+    );
+    expect(s.phase).toBe("welcome");
+    expect(s.error).toBeNull();
+    // Keeps the picks.
+    expect(s.zipPath).toBe("/z.zip");
   });
 
   it("reset returns to the initial state", () => {

@@ -85,6 +85,12 @@ export function Gallery() {
     <div className="max-w-6xl w-full">
       <header className="flex flex-wrap items-end gap-4 justify-between mb-6">
         <div>
+          <button
+            onClick={() => dispatch({ type: "go_back" })}
+            className="text-xs text-(--color-ink-soft) hover:text-(--color-ink) mb-1 inline-flex items-center gap-1"
+          >
+            ← back
+          </button>
           <h2 className="font-(family-name:--font-display) text-3xl tracking-tight">
             {state.posts.length} posts found
           </h2>

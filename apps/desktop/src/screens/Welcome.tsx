@@ -6,7 +6,6 @@ export function Welcome() {
   const state = useContext(AppStateContext);
   const dispatch = useContext(AppDispatchContext);
   const [busy, setBusy] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
 
   const canBegin = Boolean(state.zipPath && state.outputRoot) && !busy;
 
@@ -23,7 +22,6 @@ export function Welcome() {
   async function begin() {
     if (!state.zipPath || !state.outputRoot) return;
     setBusy(true);
-    setErr(null);
     dispatch({ type: "parse_start" });
     try {
       const result = await parseExport(state.zipPath);
@@ -33,7 +31,6 @@ export function Welcome() {
         warnings: result.warnings,
       });
     } catch (e) {
-      setErr(e instanceof Error ? e.message : String(e));
       dispatch({ type: "error", message: e instanceof Error ? e.message : String(e) });
     } finally {
       setBusy(false);
@@ -43,7 +40,8 @@ export function Welcome() {
   return (
     <div className="max-w-2xl w-full">
       <Header />
-      <div className="mt-12 grid gap-5">
+      {state.error ? <ErrorBanner message={state.error} /> : null}
+      <div className="mt-8 grid gap-5">
         <Step
           label="1. Your Meta export ZIP"
           value={state.zipPath ?? null}
@@ -63,11 +61,22 @@ export function Welcome() {
         >
           {busy ? "Working…" : "Read my export"}
         </button>
-        {err ? (
-          <p className="text-(--color-bad) text-sm mt-2 whitespace-pre-wrap">{err}</p>
-        ) : null}
       </div>
       <Footnote />
+    </div>
+  );
+}
+
+function ErrorBanner({ message }: { message: string }) {
+  return (
+    <div
+      role="alert"
+      className="mt-8 rounded-(--radius-card) border border-(--color-bad)/30 bg-(--color-bad)/10 px-4 py-3 text-sm"
+    >
+      <p className="font-medium text-(--color-bad) mb-1">Last attempt failed</p>
+      <pre className="font-(family-name:--font-mono) text-xs text-(--color-ink-soft) whitespace-pre-wrap break-words">
+        {message}
+      </pre>
     </div>
   );
 }
